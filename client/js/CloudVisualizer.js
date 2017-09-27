@@ -30,22 +30,16 @@ class CloudVisualizer extends CanvasEngine{
 		window.onresize = this.onResize;
 		this.onResize();
 
-		this.camera.setBackgroundColor("#000");
+		this.camera.setBackgroundColor("#337FB9");
+		this.canvas.onclick = (function() {
+					this.onUserLoggedOn();
+				}).bind(this);
+
+		this.client = new Client(this.onUserLoggedOn.bind(this), this.onUserLoggedOff.bind(this));
 	};
 
 	init() {
 		this.cloudMaxDistance = 4000;
-
-		var objects = [];
-
-		// Create and add all the boids
-		this.boids = [];
-		var numBoids = 50;
-		for (var i = 0; i < numBoids; i++) {
-			var boid = new Boid(this.boids);
-			this.boids.push(boid);
-			objects.push(boid);
-		}
 
 		this.clouds = [];
 		var numClouds = 50;
@@ -53,22 +47,30 @@ class CloudVisualizer extends CanvasEngine{
 			var cloud = new Cloud();
 			cloud.setPos((Math.random() * this.cloudMaxDistance * 2 - this.cloudMaxDistance) + this.camera.center.x, (Math.random() * this.cloudMaxDistance * 2 - this.cloudMaxDistance) + this.camera.center.y)
 			this.clouds.push(cloud);
-			objects.push(cloud);
+			this.addObject(cloud);
 		}
-
-		shuffle(objects);
-		for (var i = 0; i < objects.length; i++) {
-			this.addObject(objects[i]);
+		
+		// Create and add all the boids
+		this.boids = [];
+		var numBoids = 50;
+		for (var i = 0; i < numBoids; i++) {
+			this.onUserLoggedOn();
 		}
-
-		// Create the image object, and add it to the top of the draw stack so it's drawn first
-		this.image = new CenteredImage("js/libs/canvas-engine/demo/img.jpg");
-		this.addObject(this.image, true);
 	};
 
 	update() {
+		var removeList = [];
 		for (var i = 0; i < this.boids.length; i++) {
 			this.boids[i].update();
+
+			if (!this.boids[i].isLoggedOn && this.boids[i].pos.sub(this.camera.center).mag() > 2000) {
+				this.boids[i].destroy();
+				removeList.push(i);
+			}
+		}
+
+		for (var i = 0; i < removeList.length; i++) {
+			this.boids.splice(removeList[i], 1);
 		}
 
 		for (var i = 0; i < this.clouds.length; i++) {
@@ -82,6 +84,24 @@ class CloudVisualizer extends CanvasEngine{
 		// Uncomment to toggle camera rotation. Looks a little crazy though.
 		// this.camera.setRotation(this.camera.getFollowObject().rotate - Math.PI);
 	};
+
+	onUserLoggedOn(id) {
+		var boid = new Boid(this.boids);
+
+		var pos = new Vector(Math.random() - 0.5, Math.random() - 0.5);
+		pos = pos.normalize().multiply(1500);
+		pos = pos.add(this.camera.center);
+
+		boid.setPos(pos.x, pos.y);
+
+		this.boids.push(boid);
+		this.addObject(boid, Math.floor(this.ceObjectList.length * Math.random())+ 1);
+	}
+
+	onUserLoggedOff(id) {
+		var elem = this.boids[Math.floor(this.boids.length * Math.random())];
+		elem.logOff();
+	}
 
 	resetCloudPos(cloud) {
 		var pos = new Vector(Math.random() - 0.5, Math.random() - 0.5);
@@ -107,23 +127,33 @@ class Boid extends CEObject {
 		this.size = 10;
 		this.rotate = 0;
 
+		this.loggedOn = true;
+
 		this.family = boidFamily;
 		this.avoidDistance = 40;
-		this.attractMinimumDistancePerSibling = 5;
+		this.attractMinimumDistancePerSibling = 10;
 
 		Boid.randomJitter = new Vector();
 
+		// 224, 28, 77
+		// 236, 28, 38
+		// this.colour = "rgb(" + Math.floor(Math.random() * 12 + 224) + ", 28, " + Math.floor(Math.random() * 39 + 38) +")";
 		this.colour = "rgb(255, " + Math.random() * 255 + ", 100)";
 	};
 
 	static getNucleus(allBoids) {
 		var nucleus = new Vector();
+		var numBoids = 0;
 
 		for (var i = 0; i < allBoids.length; i++) {
-			nucleus = nucleus.add(allBoids[i].pos);
+			if (allBoids[i].loggedOn)
+			{
+				nucleus = nucleus.add(allBoids[i].pos);
+				numBoids++;
+			}
 		}
 
-		return nucleus.divide(allBoids.length);
+		return nucleus.divide(numBoids);
 	}
 
 	static getRandomJitter() {
@@ -158,31 +188,42 @@ class Boid extends CEObject {
 			averageSpeed = averageSpeed.add(sibling.speed);
 		}
 
-		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.3);
+		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.03);
 
 		var nucleus = Boid.getNucleus(this.family);
 		var delta = this.pos.sub(nucleus);
-		if (delta.mag() > this.attractMinimumDistancePerSibling * this.family.length){ // Attract each other
-			attraction = attraction.sub(delta.normalize().multiply(0.1));
+		if (delta.mag() > this.attractMinimumDistancePerSibling * this.family.length / 2){ // Attract each other
+			attraction = attraction.sub(delta.normalize().multiply(10));
 		}
 
 		var stamina = 1 - getNoise() / 2;
-		// console.log(stamina);
 
 		var vecToOrigin = (new Vector(0,0)).sub(this.pos);
 
 		var accel = new Vector();
-		accel = accel.add(avoidance);
-		accel = accel.add(attraction);
-		accel = accel.add(averageSpeed);
-		accel = accel.add(randomJitter.multiply(5));
-		// accel = accel.multiply(stamina);
-		accel = accel.multiply(0.3);
+		if (this.loggedOn) {
+			accel = accel.add(avoidance);
+			accel = accel.add(attraction);
+			accel = accel.add(averageSpeed);
+			accel = accel.add(randomJitter.multiply(5));
+			accel = accel.multiply(0.3);
+		}
+		else {
+			accel = accel.sub(attraction);
+			accel = accel.multiply(100);
+		}
 
 		this.accel = accel;
 		this.speed = this.speed.add(this.accel);
-		this.speed.clampMag(10 * stamina);
-		this.speed = this.speed.multiply(0.95);
+		
+		if (delta.mag() < this.attractMinimumDistancePerSibling * this.family.length / 2){ 
+			this.speed.clampMag(10 * stamina);
+		}
+		else {
+			this.speed.clampMag(20);
+		}
+
+		this.speed = this.speed.multiply(0.9);
 		this.pos = this.pos.add(this.speed);
 
 		this.rotate = Mathx.LerpRotation(this.rotate, Math.atan2(-this.speed.y, -this.speed.x) + Math.PI/2, 0.1);
@@ -226,6 +267,10 @@ class Boid extends CEObject {
 
 		// console.log(this.accel);
 	};
+
+	logOff() {
+		this.loggedOn = false;
+	}
 };
 
 class Cloud extends CEObject {
