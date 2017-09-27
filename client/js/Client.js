@@ -1,5 +1,5 @@
 class Client {
-	constructor(onUserLoggedIn, onUseLoggedOut) {
+	constructor(onUserLoggedIn, onUserLoggedOut) {
 		this.onUserLoggedIn = onUserLoggedIn;
 		this.onUserLoggedOut = onUserLoggedOut;
 	}
