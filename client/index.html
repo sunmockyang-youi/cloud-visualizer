@@ -3,8 +3,56 @@
 <html>
 <head>
 	<title>Cloud You.i Visualizer</title>
+
+	<style type="text/css">
+        html,body{
+        	height: 100%;
+        	margin: 0px;
+        	overflow: hidden;
+        }
+		#canvas {
+			margin: 0;
+		}
+	</style>
 </head>
 <body>
 
+<div id="debug" style="color:#FFF; position: absolute;">DEBUG</div>
+<canvas id="canvas" width="500px" height="500px"></canvas>
+
+<script type="text/javascript">
+	var canvas = null;
+	var app = null;
+
+	var debugPanel = document.getElementById("debug");
+	function log(msg) {
+		debugPanel.innerHTML = msg;
+	}
+
+	function main() {
+
+		noise.seed(Math.random());
+		canvas = document.getElementById('canvas');
+		app = new CloudVisualizer(canvas);
+		app.run();
+	};
+	window.onload = main;
+
+</script>
+
+<!-- Canvas Engine source -->
+<script type="text/javascript" src="js/libs/canvas-engine/src/CanvasEngine.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/CEObject.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/CECamera.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/CEImage.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/Math.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/Bounds.js"></script>
+<script type="text/javascript" src="js/libs/canvas-engine/src/LibraryMouse.min.js"></script>
+
+<!-- libs -->
+<script type="text/javascript" src="js/libs/perlin.js"></script>
+
+<!-- Cloud Visualizer source -->
+<script type="text/javascript" src="js/CloudVisualizer.js"></script>
 </body>
 </html>
