@@ -1,9 +1,17 @@
 "use strict";
 
-const AWS = require("aws-sdk");
-const cloudWatchLogs = new AWS.CloudWatchLogs({
-  apiVersion: "2014-03-28",
-  region: "us-east-1"
+const express = require("express");
+const app = express();
+const logs = require("./logs");
+
+app.use(express.static(__dirname + "/../../client"));
+
+app.get("/api/connections", (req, res) => {
+  res.json(logs.connections());
 });
 
-console.log(process.env);
+app.get("/api/events", (req, res) => {
+  res.json(logs.events());
+});
+
+app.listen(8080);
