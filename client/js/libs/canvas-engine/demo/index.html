@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+<head>
+	<title>Canvas Engine Demo</title>
+
+	<style type="text/css">
+        html,body{
+        	height: 100%;
+        	margin: 0px;
+        	overflow: hidden;
+        }
+		#canvas {
+			margin: 0;
+		}
+	</style>
+</head>
+<body>
+
+<canvas id="canvas" width="500px" height="500px"></canvas>
+
+<script type="text/javascript">
+	var canvas = null;
+	var app = null;
+	function main() {
+		canvas = document.getElementById('canvas');
+		app = new DemoApp(canvas);
+		app.run();
+	};
+	window.onload = main;
+
+</script>
+
+<!-- Canvas Engine source -->
+<script type="text/javascript" src="../src/CanvasEngine.js"></script>
+<script type="text/javascript" src="../src/CEObject.js"></script>
+<script type="text/javascript" src="../src/CECamera.js"></script>
+<script type="text/javascript" src="../src/CEImage.js"></script>
+<script type="text/javascript" src="../src/Math.js"></script>
+<script type="text/javascript" src="../src/Bounds.js"></script>
+<script type="text/javascript" src="../src/LibraryMouse.min.js"></script>
+
+<!-- Demo App source -->
+<script type="text/javascript" src="js/DemoApp.js"></script>
+</body>
+</html>
