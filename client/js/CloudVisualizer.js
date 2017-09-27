@@ -32,14 +32,16 @@ class CloudVisualizer extends CanvasEngine{
 
 		this.camera.setBackgroundColor("#337FB9");
 		this.canvas.onclick = (function() {
-					this.onUserLoggedOn();
+					this.onUserEvent(Math.random().toString());
 				}).bind(this);
+
+		this.boids = [];
 
 		this.client = new Client(this.onUserLoggedOn.bind(this), this.onUserLoggedOff.bind(this));
 	};
 
 	init() {
-		this.cloudMaxDistance = 4000;
+		this.cloudMaxDistance = 3000;
 
 		this.clouds = [];
 		var numClouds = 50;
@@ -48,13 +50,6 @@ class CloudVisualizer extends CanvasEngine{
 			cloud.setPos((Math.random() * this.cloudMaxDistance * 2 - this.cloudMaxDistance) + this.camera.center.x, (Math.random() * this.cloudMaxDistance * 2 - this.cloudMaxDistance) + this.camera.center.y)
 			this.clouds.push(cloud);
 			this.addObject(cloud);
-		}
-		
-		// Create and add all the boids
-		this.boids = [];
-		var numBoids = 50;
-		for (var i = 0; i < numBoids; i++) {
-			this.onUserLoggedOn();
 		}
 	};
 
@@ -86,7 +81,7 @@ class CloudVisualizer extends CanvasEngine{
 	};
 
 	onUserLoggedOn(id) {
-		var boid = new Boid(this.boids);
+		var boid = new Boid(id, this.boids);
 
 		var pos = new Vector(Math.random() - 0.5, Math.random() - 0.5);
 		pos = pos.normalize().multiply(1500);
@@ -99,8 +94,21 @@ class CloudVisualizer extends CanvasEngine{
 	}
 
 	onUserLoggedOff(id) {
-		var elem = this.boids[Math.floor(this.boids.length * Math.random())];
-		elem.logOff();
+		for (var i = 0; i < this.boids.length; i++) {
+			if (this.boids[i].id == id) {
+				elem.logOff();
+				break;
+			}
+		}
+	}
+
+	onUserEvent(id, event) {
+		for (var i = 0; i < this.boids.length; i++) {
+			// if (this.boids[i].id == id) {
+				this.boids[i].onEvent(event);
+				break;
+			// }
+		}
 	}
 
 	resetCloudPos(cloud) {
@@ -120,25 +128,27 @@ class CloudVisualizer extends CanvasEngine{
 };
 
 class Boid extends CEObject {
-	constructor(boidFamily) {
+	constructor(id, boidFamily) {
 		super();
+		this.id = id;
 		this.pos = new Vector(Math.random() * 55, Math.random() * 25);
 		this.speed = new Vector(Math.random() * 55, Math.random() * 25);
-		this.size = 10;
+		this.size = this.targetSize = this.origSize = 10;
 		this.rotate = 0;
 
 		this.loggedOn = true;
 
 		this.family = boidFamily;
-		this.avoidDistance = 40;
-		this.attractMinimumDistancePerSibling = 10;
+		this.avoidDistancePerSibling = 20;
+		this.attractMinimumDistance = 150;
+		this.jitteryness = 0;
 
 		Boid.randomJitter = new Vector();
 
 		// 224, 28, 77
 		// 236, 28, 38
 		// this.colour = "rgb(" + Math.floor(Math.random() * 12 + 224) + ", 28, " + Math.floor(Math.random() * 39 + 38) +")";
-		this.colour = "rgb(255, " + Math.random() * 255 + ", 100)";
+		this.colour = this.origColour = {r: 255, g: Math.floor(Math.random() * 255), b: 100};
 	};
 
 	static getNucleus(allBoids) {
@@ -180,19 +190,19 @@ class Boid extends CEObject {
 			var delta = this.pos.sub(sibling.pos);
 
 			// Avoid if too close
-			if (delta.mag() < this.avoidDistance) {
-				var strength = 1 - (delta.mag() / this.avoidDistance);
-				avoidance = avoidance.add(delta.multiply(strength).multiply(1));
+			if (delta.mag() < this.avoidDistancePerSibling) {
+				var strength = 1 - (delta.mag() / this.avoidDistancePerSibling);
+				avoidance = avoidance.add(delta.multiply(strength).multiply(0.5));
 			}
 
 			averageSpeed = averageSpeed.add(sibling.speed);
 		}
 
-		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.03);
+		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.07);
 
 		var nucleus = Boid.getNucleus(this.family);
 		var delta = this.pos.sub(nucleus);
-		if (delta.mag() > this.attractMinimumDistancePerSibling * this.family.length / 2){ // Attract each other
+		if (delta.mag() > this.attractMinimumDistance){ // Attract each other
 			attraction = attraction.sub(delta.normalize().multiply(10));
 		}
 
@@ -200,13 +210,15 @@ class Boid extends CEObject {
 
 		var vecToOrigin = (new Vector(0,0)).sub(this.pos);
 
+		this.jitteryness = Mathx.Lerp(this.jitteryness, 0.3, 0.01);
+
 		var accel = new Vector();
 		if (this.loggedOn) {
 			accel = accel.add(avoidance);
 			accel = accel.add(attraction);
 			accel = accel.add(averageSpeed);
-			accel = accel.add(randomJitter.multiply(5));
-			accel = accel.multiply(0.3);
+			accel = accel.add(randomJitter.multiply(this.jitteryness));
+			accel = accel.multiply(0.5);
 		}
 		else {
 			accel = accel.sub(attraction);
@@ -216,21 +228,29 @@ class Boid extends CEObject {
 		this.accel = accel;
 		this.speed = this.speed.add(this.accel);
 		
-		if (delta.mag() < this.attractMinimumDistancePerSibling * this.family.length / 2){ 
-			this.speed.clampMag(10 * stamina);
+		if (delta.mag() < this.attractMinimumDistance){ 
+			this.speed.clampMag(15 * stamina);
 		}
 		else {
-			this.speed.clampMag(20);
+			this.speed.clampMag(30);
 		}
 
-		this.speed = this.speed.multiply(0.9);
+		this.speed = this.speed.multiply(0.95);
 		this.pos = this.pos.add(this.speed);
 
 		this.rotate = Mathx.LerpRotation(this.rotate, Math.atan2(-this.speed.y, -this.speed.x) + Math.PI/2, 0.1);
+
+		this.size = Mathx.Lerp(this.size, this.origSize, 0.01);
+
+		this.colour = {
+			r: Math.floor(Mathx.Lerp(this.colour.r, this.origColour.r, 0.01)),
+			g: Math.floor(Mathx.Lerp(this.colour.g, this.origColour.g, 0.01)),
+			b: Math.floor(Mathx.Lerp(this.colour.b, this.origColour.b, 0.01))
+		};
 	};
 
 	draw() {
-		this.context.fillStyle = this.colour;
+		this.context.fillStyle = "rgb(" + this.colour.r + ", " + this.colour.g + ", " + this.colour.b + ")";
 
 		// Draw as a circle
 		// this.context.beginPath();
@@ -270,6 +290,16 @@ class Boid extends CEObject {
 
 	logOff() {
 		this.loggedOn = false;
+	}
+
+	onEvent() {
+		this.size += 20;
+		this.jitteryness = 15;
+		// this.colour = {
+		// 	r: 50,
+		// 	g: 255,
+		// 	b: 50
+		// };
 	}
 };
 
