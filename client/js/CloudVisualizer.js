@@ -37,7 +37,7 @@ class CloudVisualizer extends CanvasEngine{
 
 		this.boids = [];
 
-		this.client = new Client(this.onUserLoggedOn.bind(this), this.onUserLoggedOff.bind(this));
+		this.client = new Client(this.onUserLoggedOn.bind(this), this.onUserLoggedOff.bind(this), this.onUserEvent.bind(this));
 	};
 
 	init() {
