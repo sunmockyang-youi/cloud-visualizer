@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.123.0"
+  },
+  "devDependencies": {
+    "dotenv": "^4.0.0"
+  },
+  "scripts": {
+    "dev": "node -r dotenv/config src"
+  }
+}
