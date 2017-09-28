@@ -292,14 +292,18 @@ class Boid extends CEObject {
 		this.loggedOn = false;
 	}
 
-	onEvent() {
-		this.size += 20;
-		this.jitteryness = 15;
-		// this.colour = {
-		// 	r: 50,
-		// 	g: 255,
-		// 	b: 50
-		// };
+	onEvent(event) {
+		if (event["event"] == "ping") {
+			this.colour = {
+				r: 255,
+				g: 255,
+				b: 255
+			};
+		}
+		else {
+			this.size += 20;
+			this.jitteryness = 15;
+		}
 	}
 };
 

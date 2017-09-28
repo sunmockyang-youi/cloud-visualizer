@@ -7,7 +7,7 @@ class Client {
 		this.connections = [];
 		this.lastEventTime = 0;
 
-		this.requestInterval = 60 * 1000;
+		this.requestInterval = 10 * 1000;
 
 		const req = () => {
 			let headers = {
