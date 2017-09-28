@@ -7,7 +7,7 @@ class Client {
     this.connections = [];
     this.lastEventTime = 0;
 
-    this.requestInterval = 10 * 1000;
+    this.requestInterval = 5 * 1000;
 
     const req = () => {
       let headers = {
@@ -70,7 +70,7 @@ class Client {
           this.lastEventTime = events[i]["time"];
         }
 
-        this.onUserEvent(events[i]["id"], events[i]["event"]);
+        this.onUserEvent(events[i]["id"], events[i]);
       }
     }
   }
