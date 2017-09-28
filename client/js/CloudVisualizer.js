@@ -74,7 +74,10 @@ class CloudVisualizer extends CanvasEngine{
 			}
 		}
 
-		this.camera.lookAt(Boid.getNucleus(this.boids));
+		if (this.boids.length > 0)
+		{
+			this.camera.lookAt(Boid.getNucleus(this.boids));
+		}
 
 		// Uncomment to toggle camera rotation. Looks a little crazy though.
 		// this.camera.setRotation(this.camera.getFollowObject().rotate - Math.PI);
@@ -96,7 +99,7 @@ class CloudVisualizer extends CanvasEngine{
 	onUserLoggedOff(id) {
 		for (var i = 0; i < this.boids.length; i++) {
 			if (this.boids[i].id == id) {
-				elem.logOff();
+				this.boids[i].logOff();
 				break;
 			}
 		}

@@ -43,22 +43,23 @@ class Client {
     console.error(e);
   }
 
-  onClientDataReceived(connections) {
+  onClientDataReceived(newConnections) {
     var disconnects = this.connections.slice(0);
     for (var i = 0; i < this.connections.length; i++) {
-      if (connections.includes(this.connections[i])) {
+      if (newConnections.includes(this.connections[i])) {
         disconnects.splice(disconnects.indexOf(this.connections[i]), 1);
-        connections.splice(disconnects.indexOf(this.connections[i]), 1);
+        newConnections.splice(newConnections.indexOf(this.connections[i]), 1);
       }
     }
 
-    for (var i = 0; i < connections.length; i++) {
-      this.onUserLoggedIn(connections[i]);
-      this.connections.push(connections[i]);
+    for (var i = 0; i < newConnections.length; i++) {
+      this.onUserLoggedIn(newConnections[i]);
+      this.connections.push(newConnections[i]);
     }
 
     for (var i = 0; i < disconnects.length; i++) {
       // setTimeout(this.requestInterval * Math.random(), function() {});
+      this.connections.splice(this.connections.indexOf(disconnects[i]), 1);
       this.onUserLoggedOut(disconnects[i]);
     }
   }
