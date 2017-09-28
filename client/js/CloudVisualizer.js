@@ -117,7 +117,7 @@ class CloudVisualizer extends CanvasEngine{
 
 	resetCloudPos(cloud) {
 		var pos = new Vector(Math.random() - 0.5, Math.random() - 0.5);
-		pos = pos.normalize().multiply(1500);
+		pos = pos.normalize().multiply(1750);
 		pos = pos.add(this.camera.center);
 		cloud.setPos(pos.x , pos.y);
 	}
