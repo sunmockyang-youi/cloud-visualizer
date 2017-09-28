@@ -30,13 +30,13 @@ class Client {
   }
 
   connectionsHandler(response) {
-    if (response.body) {
-      this.onClientDataReceived(JSON.parse(response.body));
+    if (response.ok) {
+      response.json().then(this.onClientDataReceived.bind(this));
     }
   }
   eventsHandler(response) {
-    if (response.body) {
-      this.onEventDataReceived(JSON.parse(response.body));
+    if (response.ok) {
+      response.json().then(this.onEventDataReceived.bind(this));
     }
   }
   errorHandler(e) {
