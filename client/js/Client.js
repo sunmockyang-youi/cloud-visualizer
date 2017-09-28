@@ -53,14 +53,19 @@ class Client {
     }
 
     for (var i = 0; i < newConnections.length; i++) {
-      this.onUserLoggedIn(newConnections[i]);
-      this.connections.push(newConnections[i]);
+    	  var index = i;
+	      setTimeout((function() {
+			  this.onUserLoggedIn(newConnections[index]);
+	      }).bind(this), this.requestInterval * Math.random());
+		  this.connections.push(newConnections[i]);
     }
 
     for (var i = 0; i < disconnects.length; i++) {
-      // setTimeout(this.requestInterval * Math.random(), function() {});
-      this.connections.splice(this.connections.indexOf(disconnects[i]), 1);
-      this.onUserLoggedOut(disconnects[i]);
+	      this.connections.splice(this.connections.indexOf(disconnects[i]), 1);
+          var index = i;
+	      setTimeout((function() {
+		      this.onUserLoggedOut(disconnects[index]);
+	      }).bind(this), this.requestInterval * Math.random());
     }
   }
 
@@ -71,7 +76,11 @@ class Client {
           this.lastEventTime = events[i]["time"];
         }
 
-        this.onUserEvent(events[i]["id"], events[i]);
+        var index = i;
+
+		setTimeout((function() {
+			this.onUserEvent(events[index]["id"], events[index]);
+		}).bind(this), this.requestInterval * Math.random());
       }
     }
   }

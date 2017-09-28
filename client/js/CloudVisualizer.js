@@ -34,6 +34,7 @@ class CloudVisualizer extends CanvasEngine{
 		this.canvas.onclick = (function() {
 					this.onUserEvent(Math.random().toString());
 				}).bind(this);
+		this.camera.setFollowStrength(0.2);
 
 		this.boids = [];
 
@@ -76,7 +77,7 @@ class CloudVisualizer extends CanvasEngine{
 
 		if (this.boids.length > 0)
 		{
-			this.camera.lookAt(Boid.getNucleus(this.boids));
+			this.camera.setFollowObject(Boid.getNucleusAsFollowObject(this.boids));
 		}
 
 		// Uncomment to toggle camera rotation. Looks a little crazy though.
@@ -169,6 +170,13 @@ class Boid extends CEObject {
 		return nucleus.divide(numBoids);
 	}
 
+	static getNucleusAsFollowObject(allBoids) {
+		var nucleus = Boid.getNucleus(allBoids);
+		var follow = new CEObject();
+		follow.pos = nucleus;
+		return follow;
+	}
+
 	static getRandomJitter() {
 		// var nucleus = Boid.getNucleus(allBoids);
 		return new Vector(getNoise(3451341423, 1.5), getNoise(9587434, 1.5));
@@ -201,7 +209,7 @@ class Boid extends CEObject {
 			averageSpeed = averageSpeed.add(sibling.speed);
 		}
 
-		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.07);
+		averageSpeed = averageSpeed.divide(this.family.length).multiply(0.1);
 
 		var nucleus = Boid.getNucleus(this.family);
 		var delta = this.pos.sub(nucleus);
