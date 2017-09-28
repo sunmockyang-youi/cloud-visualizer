@@ -104,10 +104,10 @@ class CloudVisualizer extends CanvasEngine{
 
 	onUserEvent(id, event) {
 		for (var i = 0; i < this.boids.length; i++) {
-			// if (this.boids[i].id == id) {
+			if (this.boids[i].id == id) {
 				this.boids[i].onEvent(event);
 				break;
-			// }
+			}
 		}
 	}
 
